@@ -2,10 +2,15 @@
 	"name": "sdbs-scraper",
 	"version": "1.0.0",
 	"description": "",
-	"main": "index.js",
+	"type": "module",
+	"main": "src/index.ts",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
-		"precommit": "lint-staged"
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:update": "vitest run --update",
+		"precommit": "lint-staged",
+		"start": "tsx src/index.ts",
+		"debug": "DEBUG=pw:browser* tsx src/index.ts"
 	},
 	"keywords": [],
 	"author": "",
@@ -13,11 +18,18 @@
 	"packageManager": "pnpm@10.21.0",
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.14",
-		"lint-staged": "^16.2.7"
+		"lint-staged": "^16.2.7",
+		"ts-node": "^10.9.2",
+		"tsx": "^4.21.0",
+		"typescript": "^5.9.3",
+		"vitest": "^4.0.18"
 	},
 	"lint-staged": {
 		"*.{js,ts,jsx,tsx,json,css,md}": [
 			"biome check --write"
 		]
+	},
+	"dependencies": {
+		"playwright": "^1.58.2"
 	}
 }
