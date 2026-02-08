@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:alpine3.23
+    restart: always
+    env_file:
+      - ".env"
+    volumes:
+      - ../.hydragen-v2/volumes/postgresql/:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  postgres-migrate:
+    image: redgate/flyway:12.0-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - ".env"
+    volumes:
+      - ./flyway/sql:/flyway/sql
+      - ./flyway/conf:/flyway/conf
+    restart: "no"
