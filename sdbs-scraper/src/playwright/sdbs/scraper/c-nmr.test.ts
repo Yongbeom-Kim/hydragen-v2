@@ -19,6 +19,8 @@ describe("scrapeCNmrSpecData", () => {
 
 	const testCases = [
 		{ sdbsNumber: 3302, description: "methanol", expectedLength: 5 },
+		{ sdbsNumber: 4218, description: "CH5N", expectedLength: 0 },
+		{ sdbsNumber: 7948, description: "CH3DO", expectedLength: 1 },
 	];
 
 	for (const { sdbsNumber, description, expectedLength } of testCases) {
