@@ -10,6 +10,19 @@ services:
   
   postgres-migrate:
     entrypoint: []
-    command: ["/bin/sh", "-c", "echo 'flyway ready'; while true; do sleep 3600; done"]
+    command: ["/bin/sh", "-c", "flyway migrate; echo 'flyway ready'; while true; do sleep 3600; done"]
     stdin_open: true
     tty: true
+  
+  dataset-loader:
+    entrypoint: []
+    # command: ["/bin/sh", "-c", "echo 'dataset-loader ready'; while true; do sleep 3600; done"]
+    # command: ["/bin/sh", "-c", "echo 'dataset-loader ready'; pwd"]
+    command: ["python", "./index.py"]
+    volumes:
+      - ./dataset-loader:/app/dataset-loader
+    stdin_open: true
+    tty: true
+    depends_on:
+      postgres-migrate:
+        condition: service_started

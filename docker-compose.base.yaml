@@ -23,3 +23,10 @@ services:
       - ./flyway/sql:/flyway/sql
       - ./flyway/conf:/flyway/conf
     restart: "no"
+
+  dataset-loader:
+    build:
+      context: ./dataset-loader
+      dockerfile: Dockerfile
+    env_file:
+      - ".env"
