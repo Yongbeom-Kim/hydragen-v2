@@ -22,18 +22,23 @@ export const tryAcceptDisclaimerWithMinDelay = async (
 	page: Page,
 	minDelayMs: number = 500,
 ) => {
-	const start = Date.now();
-	const disclaimer = await page.$(".DisclaimeraAcceptClass");
-	if (disclaimer) {
-		const input = await disclaimer.$("input");
-		if (input) {
-			await input.click();
+	try {
+		await page.waitForLoadState("networkidle");
+		const start = Date.now();
+		const disclaimer = await page.$(".DisclaimeraAcceptClass");
+		if (disclaimer) {
+			const input = await disclaimer.$("input");
+			if (input) {
+				await input.click();
+			}
 		}
-	}
-	await page.waitForLoadState("networkidle");
-	const elapsed = Date.now() - start;
-	if (elapsed < minDelayMs) {
-		await page.waitForTimeout(minDelayMs - elapsed);
+		await page.waitForLoadState("networkidle");
+		const elapsed = Date.now() - start;
+		if (elapsed < minDelayMs) {
+			await page.waitForTimeout(minDelayMs - elapsed);
+		}
+	} catch {
+		// do nothing
 	}
 };
 

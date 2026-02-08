@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import { launchBrowser, launchPage } from "./playwright/launch.js";
 import { navigateTo, tryAcceptDisclaimer } from "./playwright/sdbs/index.js";
-import { scrapeMassSpecData } from "./playwright/sdbs/scraper/mass-spec.js";
+import { scrapeMassSpecData } from "./playwright/sdbs/scraper/mass.js";
 
 const browser = await launchBrowser();
 const page = await launchPage(browser);

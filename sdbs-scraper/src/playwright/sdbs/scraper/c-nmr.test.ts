@@ -2,9 +2,9 @@ import type { Browser, Page } from "playwright";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { launchBrowser, launchPage } from "../../launch.js";
 import { navigateTo, tryAcceptDisclaimer } from "../index.js";
-import { scrapeMassSpecData } from "./mass-spec.js";
+import { scrapeCNmrSpecData } from "./c-nmr.js";
 
-describe("scrapeMassSpecData", () => {
+describe("scrapeCNmrSpecData", () => {
 	let browser: Browser;
 	let page: Page;
 
@@ -18,19 +18,17 @@ describe("scrapeMassSpecData", () => {
 	});
 
 	const testCases = [
-		{ sdbsNumber: 3022, description: "SDBS 3022" },
-		{ sdbsNumber: 3151, description: "SDBS 3151" },
-		{ sdbsNumber: 3308, description: "SDBS 3308" },
-		{ sdbsNumber: 8120, description: "SDBS 8120" },
+		{ sdbsNumber: 3302, description: "methanol", expectedLength: 5 },
 	];
 
-	for (const { sdbsNumber, description } of testCases) {
-		it(`should scrape mass spec data for ${description}`, async () => {
+	for (const { sdbsNumber, description, expectedLength } of testCases) {
+		it(`should scrape C-NMR spec data for ${description}`, async () => {
 			await navigateTo(page, sdbsNumber);
 			await tryAcceptDisclaimer(page);
 
-			const result = await scrapeMassSpecData(page);
-			expect(result).toMatchSnapshot(`${description}-peak-data`);
+			const result = await scrapeCNmrSpecData(page);
+			expect(result).toHaveLength(expectedLength);
+			expect(result).toMatchSnapshot(`${description}-cnmr-data`);
 		});
 	}
 });
