@@ -1,0 +1,18 @@
+# 2026-02-08 - Mass Spec Database from Massbank (~100k molecules)
+
+This document documents the plan to get a M/S Database. We will create an ETL (Extract-Transform-Load) pipeline from the MassBank MS Database Data Dump, giving us around 100k molecules’ MS raw data to play around with.
+
+
+**Data Source:** MassBank MS Database
+- Website: https://massbank.eu/MassBank/
+- Data Dump: https://github.com/MassBank/MassBank-data/releases
+**Database:**
+- DB Instance: Postgresql (postgres:alpine3.23 [image](https://hub.docker.com/layers/library/postgres/alpine3.23/images/sha256-5d181cfe9939aaef5f9d70c926d3183c7094f0fd37a66de7f9e9f9a51cc80fc4))
+- Migrations with: Flyway (redgate/flyway:12.0-alpine [image](https://hub.docker.com/layers/redgate/flyway/12.0-alpine/images/sha256-8d42ec1f96632064639d6c3cd4b1edef5903790431089c64cf8ea81058c1621b))
+- ETL Pipeline (Massbank Data Dump → Postgres) with Python3.13 service.
+
+## Table Definitions
+
+- [`compounds`](../../flyway/sql/V001_20260208092918__Add%20Compounds%20Table.sql): Chemical info
+- [`mass_spectra`](../../flyway/sql/V002_20260208100202__Add%20Mass%20Spec%20Table.sql): Raw M/S spectrometric data
+- [`dataset_loader`](../../flyway/sql/V003_20260208122633__Add%20Dataset%20Loader%20Table.sql): Table to checkpoint dataset ETL progress
