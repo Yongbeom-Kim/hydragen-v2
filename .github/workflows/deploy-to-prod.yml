@@ -16,9 +16,6 @@ jobs:
       - name: 'Create env file'
         run: |
           touch .env
-          echo HOSTNAME=docs.yongbeom.com >> .env
-          echo APP_URL=https://docs.yongbeom.com/auth >> .env
-          echo STORAGE_KEY=${{ secrets.STORAGE_KEY }} >> .env
 
           echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
           echo FLYWAY_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
@@ -26,7 +23,7 @@ jobs:
           echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
           echo FLYWAY_USER=${{ secrets.POSTGRES_USER }} >> .env
 
-          echo FLYWAY_URL=jdbc:postgresql://postgres:5432/postgres
+          echo FLYWAY_URL=jdbc:postgresql://postgres:5432/postgres >> .env
           cat .env
 
       - name: Deploy
