@@ -2,43 +2,13 @@ from abc import ABC, abstractmethod
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from typing import Optional
-import os
 import urllib.request
 import hashlib
 
 import psycopg
-from psycopg_pool import ConnectionPool
 
+from facade.db import get_connection
 from utils.dir import get_root_dir
-
-_POOL: Optional[ConnectionPool] = None
-
-
-def _get_pool() -> ConnectionPool:
-	"""Return a lazily-created module-level connection pool."""
-	global _POOL
-	if _POOL is None:
-		_POOL = ConnectionPool(
-			kwargs={
-				"host": os.environ.get("POSTGRES_HOST", "postgres"),
-				"port": os.environ.get("POSTGRES_PORT", "5432"),
-				"dbname": os.environ.get("POSTGRES_DB", "postgres"),
-				"user": os.environ.get("POSTGRES_USER", "postgres"),
-				"password": os.environ.get("POSTGRES_PASSWORD", ""),
-			},
-			min_size=1,
-			max_size=10,
-			open=True,
-		)
-	return _POOL
-
-
-def close_pool() -> None:
-	"""Close the module-level connection pool. Optional cleanup for long-running processes."""
-	global _POOL
-	if _POOL is not None:
-		_POOL.close()
-		_POOL = None
 
 
 @dataclass
@@ -88,7 +58,7 @@ class DatasetLoaderBase(ABC):
 
 	def _get_connection(self) -> AbstractContextManager[psycopg.Connection]:
 		"""Return a context manager that yields a connection from the pool."""
-		return _get_pool().connection()
+		return get_connection()
 
 	def _read_loader_state(self) -> Optional[DatasetLoaderState]:
 		"""Read current state for this loader from dataset_loader table."""

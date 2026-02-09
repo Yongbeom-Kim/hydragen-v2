@@ -1,6 +1,8 @@
-from psycopg.types.json import Jsonb
 import time
 
+from psycopg.types.json import Jsonb
+
+from facade.db import upsert_compound, upsert_mass_spectrum
 from .dataset_loader_base import DatasetLoaderBase
 
 # MassBank metadata key -> mass_spectra table column name
@@ -51,60 +53,6 @@ def map_metadata_to_table_row(metadata: dict[str, str]) -> dict[str, str | float
 	return row
 
 
-MASS_SPECTRA_COLS = (
-	"inchikey", "molecular_weight", "exact_mass", "precursor_mz", "precursor_type",
-	"ion_mode", "collision_energy", "spectrum_type", "instrument", "instrument_type",
-	"splash", "db_number", "source", "comments", "raw_data",
-)
-
-
-def insert_compound(cur, compound: dict[str, str]) -> None:
-	"""Upsert a single row into compounds. On conflict (inchikey), update name, inchi, smiles, formula."""
-	cur.execute(
-		"""
-		INSERT INTO compounds (inchikey, name, inchi, smiles, formula)
-		VALUES (%(inchikey)s, %(name)s, %(inchi)s, %(smiles)s, %(formula)s)
-		ON CONFLICT (inchikey) DO UPDATE SET
-			name = EXCLUDED.name,
-			inchi = EXCLUDED.inchi,
-			smiles = EXCLUDED.smiles,
-			formula = EXCLUDED.formula
-		""",
-		compound,
-	)
-
-
-def insert_mass_spectrum(cur, row: dict) -> None:
-	"""Upsert a single row into mass_spectra. Row must include all keys in MASS_SPECTRA_COLS (e.g. raw_data as Jsonb)."""
-	cur.execute(
-		"""
-		INSERT INTO mass_spectra (
-			inchikey, molecular_weight, exact_mass, precursor_mz, precursor_type,
-			ion_mode, collision_energy, spectrum_type, instrument, instrument_type,
-			splash, db_number, source, comments, raw_data
-		) VALUES (
-			%(inchikey)s, %(molecular_weight)s, %(exact_mass)s, %(precursor_mz)s, %(precursor_type)s,
-			%(ion_mode)s, %(collision_energy)s, %(spectrum_type)s, %(instrument)s, %(instrument_type)s,
-			%(splash)s, %(db_number)s, %(source)s, %(comments)s, %(raw_data)s
-		)
-		ON CONFLICT (inchikey, db_number, source) DO UPDATE SET
-			molecular_weight = EXCLUDED.molecular_weight,
-			exact_mass = EXCLUDED.exact_mass,
-			precursor_mz = EXCLUDED.precursor_mz,
-			precursor_type = EXCLUDED.precursor_type,
-			ion_mode = EXCLUDED.ion_mode,
-			collision_energy = EXCLUDED.collision_energy,
-			spectrum_type = EXCLUDED.spectrum_type,
-			instrument = EXCLUDED.instrument,
-			instrument_type = EXCLUDED.instrument_type,
-			splash = EXCLUDED.splash,
-			comments = EXCLUDED.comments,
-			raw_data = EXCLUDED.raw_data
-		""",
-		{k: row.get(k) for k in MASS_SPECTRA_COLS},
-	)
-
-
 class MassbankDataLoader(DatasetLoaderBase):
 	def __init__(self, uniq_key: str, source_url: str, batch_size: int = 100, batch_delay: float = 0.0):
 		super().__init__(uniq_key, source_url)
@@ -126,8 +74,8 @@ class MassbankDataLoader(DatasetLoaderBase):
 						continue
 					row["source"] = self.uniq_key
 					row["raw_data"] = Jsonb(parsed["peaks"])
-					insert_compound(cur, compound)
-					insert_mass_spectrum(cur, row)
+					upsert_compound(cur, compound)
+					upsert_mass_spectrum(cur, row)
 
 					self._row_count += 1
 					if self._row_count % self.batch_size == 0:
@@ -135,6 +83,7 @@ class MassbankDataLoader(DatasetLoaderBase):
 						conn.commit()
 						if self.batch_delay:
 							time.sleep(self.batch_delay)
+				conn.commit()
 
 	def _get_dataset_raw_items(self):
 		with open(self.dataset_path, "rb", buffering=1024 * 1024) as f:
