@@ -32,11 +32,11 @@ attach-postgres: ## Attach a shell to the Postgres container
 	docker container exec --env-file .env -it hydragen-v2-postgres-1 /bin/bash
 
 stop: ## Stop Docker Compose development stack
-	docker compose -f docker-compose.base.yaml -f docker-compose.dev.yaml 
+	docker compose -f docker-compose.base.yaml down
 
 ##@ Cleaning
 
-clean-volumnes: ## Delete Docker volumes (local development volumes only!)
+clean-volumes: ## Delete Docker volumes (local development volumes only!)
 	sudo rm -rf ../.hydragen-v2/volumes/*
 
 ##@ SSH

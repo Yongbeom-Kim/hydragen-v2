@@ -7,5 +7,6 @@ loaders = [
 	)
 ]
 
+print('Starting Dataset Loader', flush=True)
 for loader in loaders:
 	loader.load()

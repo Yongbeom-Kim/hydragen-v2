@@ -28,6 +28,7 @@ class DatasetLoaderBase(ABC):
 		self.dataset_version = dataset_version
 
 	def load(self):
+		print(f"Loading dataset: {self.uniq_key} from {self.source_url}", flush=True)
 		self._download_dataset()
 		state = self._read_loader_state()
 		if state is not None and state.status == "success":

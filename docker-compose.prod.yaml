@@ -3,6 +3,8 @@ services:
     command: ["migrate"]
   
   dataset-loader:
+    environment:
+      - PYTHONUNBUFFERED=1
     command: ["python", "./index.py"]
     depends_on:
       postgres-migrate:

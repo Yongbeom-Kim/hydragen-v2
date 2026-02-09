@@ -79,7 +79,7 @@ class MassbankDataLoader(DatasetLoaderBase):
 
 					self._row_count += 1
 					if self._row_count % self.batch_size == 0:
-						print(f"Committed {self._row_count} records so far.")
+						print(f"Committed {self._row_count} records so far.", flush=True)
 						conn.commit()
 						if self.batch_delay:
 							time.sleep(self.batch_delay)
