@@ -5,5 +5,5 @@ services:
   dataset-loader:
     command: ["python", "./index.py"]
     depends_on:
-      - postgres-migrate:
+      postgres-migrate:
         condition: service_completed_successfully
