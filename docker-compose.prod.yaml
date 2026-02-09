@@ -9,3 +9,19 @@ services:
     depends_on:
       postgres-migrate:
         condition: service_completed_successfully
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: runtime
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: runtime
+
+  caddy:
+    ports:
+      - "443:443"

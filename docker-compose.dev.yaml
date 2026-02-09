@@ -26,3 +26,34 @@ services:
     depends_on:
       postgres-migrate:
         condition: service_started
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - ./server:/app
+    command: ["go", "run", "./main.go"]
+    stdin_open: true
+    tty: true
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      target: dev
+    volumes:
+      - ./client:/app
+    ports:
+      - "3000:3000"
+    # command: ["pnpm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+    stdin_open: true
+    tty: true
+
+  caddy:
+    environment:
+      - SITE_ADDR="http://localhost:3111"
+      - CADDY_GLOBAL_OPTIONS=auto_https off
+    ports:
+      - "3111:3111"

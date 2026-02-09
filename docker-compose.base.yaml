@@ -30,3 +30,27 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ".env"
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    expose:
+      - "8080"
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2.8-alpine
+    depends_on:
+      - client
+      - server
+    env_file:
+      - ".env"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
