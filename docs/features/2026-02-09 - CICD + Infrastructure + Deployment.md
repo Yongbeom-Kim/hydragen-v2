@@ -11,3 +11,26 @@ New Hetzner Server: https://console.hetzner.com/projects/13384053/servers/120476
 ## DNS
 - Cloud DNS Console: [link](https://console.cloud.google.com/net-services/dns/zones/senpailearn-com/details?authuser=1&project=senpailearn-global)
 - Implemented with OpenTofu + Encrypted local state (committed to git)
+
+## Reverse Proxy & TLS Termination
+- We use Caddy for reverse proxy and TLS Termination.
+	- Dev: http://localhost:3111
+	- Prod: https://hydragen.senpailearn.com
+
+[Caddyfile](../../caddy/Caddyfile):
+```Caddyfile
+{$SITE_ADDR} {
+  @root path /
+  redir @root /v2 permanent
+
+  @api path /v2/api*
+  handle @api {
+    uri strip_prefix /v2/api
+    reverse_proxy server:8080
+  }
+
+  handle /v2* {
+    reverse_proxy client:3000
+  }
+}
+```
