@@ -13,6 +13,9 @@ setup: ## Set up local git hooks
 start: ## Start Docker Compose with production config
 	docker compose -f docker-compose.base.yaml -f docker-compose.prod.yaml up
 
+start_detached: ## Start Docker Compose with production config
+	docker compose -f docker-compose.base.yaml -f docker-compose.prod.yaml up -d
+
 dev: ## Build & start Docker Compose with development config
 	docker compose -f docker-compose.base.yaml -f docker-compose.dev.yaml build
 	docker compose -f docker-compose.base.yaml -f docker-compose.dev.yaml up
