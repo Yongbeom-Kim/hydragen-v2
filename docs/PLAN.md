@@ -10,16 +10,19 @@
 - Backend: Go Backend
 - DB: Postgresql
 - ETL: Python
-- Infrastructure: Hetzner (server) + GCP (DNS)
+- Infrastructure: Hetzner ([server](https://console.hetzner.com/projects/13384053/servers/120476441/overview)) + GCP (DNS [console](https://console.cloud.google.com/net-services/dns/zones/senpailearn-com/details?authuser=1&project=senpailearn-global))
 - Deploy: Docker Compose
 - SSL Termination / Reverse Proxy: Caddy
 
+
+## Current Cost
+- Hetzner Server: USD 3.80/month ≈ SGD 4.82/month
 
 ## Technical Documents & TODOs
 
 ### Phase 1
 - [2026-02-08 - Mass Spec Database from Massbank (~100k molecules)](./features/2026-02-08%20-%20Mass%20Spec%20Database%20from%20Massbank%20(~100k%20molecules))
-- CI/CD + Infrastructure + Deployment
+- [2026-02-09 - CI/CD + Infrastructure + Deployment](./features/2026-02-09%20-%20CICD%20+%20Infrastructure%20+%20Deployment.md)
 - Mass Spec CRUD Frontend (MVP For Graph Display)
 - Telemetry Exploration
 	- What data can/should we collect? What can we interpret from the data?
