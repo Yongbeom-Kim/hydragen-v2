@@ -41,10 +41,10 @@ def metadata_to_compounds_table_row(metadata: dict[str, str]) -> dict[str, str] 
 def data_to_mass_spectra_table_row(
     metadata: dict[str, str],
     m_z_arr: list[int],
-    intensity_arr: list[int]
-) -> dict[str, str | float | None]:
-	"""Map MassBank metadata keys to mass_spectra table columns. Drops unmapped keys."""
-	row: dict[str, str | float | None] = {}
+    intensity_arr: list[int],
+) -> dict[str, str | float | None | list[int]]:
+	"""Map MassBank metadata keys to mass_spectra table columns. m_z and peaks must be int arrays for DB int4[]."""
+	row: dict[str, str | float | None | list[int]] = {}
 	for meta_key, value in metadata.items():
 		table_key = METADATA_KEY_TO_TABLE_KEY.get(meta_key)
 		if table_key is None:
@@ -63,7 +63,7 @@ def data_to_mass_spectra_table_row(
 
 
 class MassbankDataLoader(DatasetLoaderBase):
-	def __init__(self, uniq_key: str, source_url: str, batch_size: int = 100, batch_delay: float = 0.0):
+	def __init__(self, uniq_key: str, source_url: str, batch_size: int = 1000, batch_delay: float = 0.0):
 		super().__init__(uniq_key, source_url)
 		self._row_count = 0
 		self.batch_size = batch_size
@@ -97,13 +97,19 @@ class MassbankDataLoader(DatasetLoaderBase):
 
 	def batch_write_to_db(self, cur, conn, compounds_batch: list, rows_batch: list) -> None:
 		"""Upsert one batch of compounds and mass spectra (deduped in SQL), then commit."""
-		upsert_compounds_batch(cur, compounds_batch)
-		upsert_mass_spectra_batch(cur, rows_batch)
-		self._row_count += len(rows_batch)
-		print(f"Committed {self._row_count} records so far.", flush=True)
-		conn.commit()
-		if self.batch_delay:
-			time.sleep(self.batch_delay)
+		try:
+			upsert_compounds_batch(cur, compounds_batch)
+			upsert_mass_spectra_batch(cur, rows_batch)
+			self._row_count += len(rows_batch)
+			print(f"Committed {self._row_count} records so far.", flush=True)
+			conn.commit()
+			if self.batch_delay:
+				time.sleep(self.batch_delay)
+		except Exception as e:
+			print(f"batch_write_to_db failed: {e}", flush=True)
+			print("compounds_batch:", compounds_batch, flush=True)
+			print("rows_batch:", rows_batch, flush=True)
+			raise
 
 	def _get_dataset_raw_items(self):
 		"""Yield one MassBank record (bytes) at a time. Resets item_raw after each yield to avoid unbounded memory growth."""
@@ -118,13 +124,13 @@ class MassbankDataLoader(DatasetLoaderBase):
 				yield b"".join(item_raw)
 
 	@staticmethod
-	def _parse_raw_item(raw_item: bytes) -> tuple[dict[str, str], tuple[list[float], list[float]]]:
-		"""Parse a MassBank record: metadata (Field: Value) and peak data (m/z intensity)."""
+	def _parse_raw_item(raw_item: bytes) -> tuple[dict[str, str], tuple[list[int], list[int]]]:
+		"""Parse a MassBank record: metadata (Field: Value) and peak data (m/z intensity). Returns m/z scaled by MZ_SCALE and intensity rounded to int for DB int4[]."""
 		text = raw_item.decode("utf-8")
 		lines = text.strip().splitlines()
 
 		metadata: dict[str, str] = {}
-		m_z_arr: list[float] = []
+		m_z_arr: list[int] = []
 		intensity_arr: list[int] = []
 
 		for line in lines:
@@ -140,8 +146,8 @@ class MassbankDataLoader(DatasetLoaderBase):
 				parts = line.split()
 				if len(parts) >= 2:
 					try:
-						m_z_arr.append(float(parts[0]))
-						intensity_arr.append(float(parts[1]))
+						m_z_arr.append(round(float(parts[0]) * MZ_SCALE))
+						intensity_arr.append(round(float(parts[1])))
 					except ValueError:
 						pass
 
