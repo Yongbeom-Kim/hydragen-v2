@@ -59,6 +59,9 @@ def data_to_mass_spectra_table_row(
 		
 	row["m_z"] = m_z_arr
 	row["peaks"] = intensity_arr
+	row["precursor_mz"] = row.get("precursor_mz", -1)
+	row["molecular_weight"] = row.get("molecular_weight", -1)
+	row["exact_mass"] = row.get("exact_mass", -1)
 	return row
 
 
