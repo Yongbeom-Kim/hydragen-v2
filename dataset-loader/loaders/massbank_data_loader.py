@@ -106,12 +106,16 @@ class MassbankDataLoader(DatasetLoaderBase):
 			time.sleep(self.batch_delay)
 
 	def _get_dataset_raw_items(self):
+		"""Yield one MassBank record (bytes) at a time. Resets item_raw after each yield to avoid unbounded memory growth."""
 		with open(self.dataset_path, "rb", buffering=1024 * 1024) as f:
-			item_raw = []
+			item_raw: list[bytes] = []
 			for line_raw in f:
-				if (len(item_raw) != 0 and line_raw.startswith(b"Name:")):
+				if len(item_raw) != 0 and line_raw.startswith(b"Name:"):
 					yield b"".join(item_raw)
+					item_raw.clear()
 				item_raw.append(line_raw)
+			if item_raw:
+				yield b"".join(item_raw)
 
 	@staticmethod
 	def _parse_raw_item(raw_item: bytes) -> tuple[dict[str, str], tuple[list[float], list[float]]]:
