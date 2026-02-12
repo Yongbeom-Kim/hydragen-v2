@@ -120,7 +120,7 @@ def _batch_values_placeholders(n_rows: int, n_cols: int) -> str:
 
 
 def upsert_compounds_batch(cur: Cursor[Any], compounds: list[dict[str, str]]) -> None:
-	"""Upsert multiple rows into compounds in one statement. Empty list is a no-op."""
+	"""Upsert multiple rows into compounds in one statement. Dedupes by inchikey in SQL. Empty list is a no-op."""
 	if not compounds:
 		return
 	placeholders = _batch_values_placeholders(len(compounds), len(_COMPOUND_COLS))
@@ -128,10 +128,17 @@ def upsert_compounds_batch(cur: Cursor[Any], compounds: list[dict[str, str]]) ->
 	for c in compounds:
 		for k in _COMPOUND_COLS:
 			params.append(c.get(k))
+	cols = ", ".join(_COMPOUND_COLS)
 	cur.execute(
 		f"""
+		WITH batch({cols}) AS (VALUES {placeholders}),
+		deduped AS (
+			SELECT DISTINCT ON (inchikey) {cols}
+			FROM batch
+			ORDER BY inchikey
+		)
 		INSERT INTO compounds (inchikey, name, inchi, smiles, formula)
-		VALUES {placeholders}
+		SELECT * FROM deduped
 		ON CONFLICT (inchikey) DO UPDATE SET
 			name = EXCLUDED.name,
 			inchi = EXCLUDED.inchi,
@@ -143,7 +150,7 @@ def upsert_compounds_batch(cur: Cursor[Any], compounds: list[dict[str, str]]) ->
 
 
 def upsert_mass_spectra_batch(cur: Cursor[Any], rows: list[dict[str, Any]]) -> None:
-	"""Upsert multiple rows into mass_spectra in one statement. Row dicts must include MASS_SPECTRA_COLS. Empty list is a no-op."""
+	"""Upsert multiple rows into mass_spectra in one statement. Dedupes by (inchikey, db_number, source) in SQL. Row dicts must include MASS_SPECTRA_COLS. Empty list is a no-op."""
 	if not rows:
 		return
 	n_cols = len(MASS_SPECTRA_COLS)
@@ -152,13 +159,21 @@ def upsert_mass_spectra_batch(cur: Cursor[Any], rows: list[dict[str, Any]]) -> N
 	for row in rows:
 		for k in MASS_SPECTRA_COLS:
 			params.append(row.get(k))
+	cols = ", ".join(MASS_SPECTRA_COLS)
 	cur.execute(
 		f"""
+		WITH batch({cols}) AS (VALUES {placeholders}),
+		deduped AS (
+			SELECT DISTINCT ON (inchikey, db_number, source) {cols}
+			FROM batch
+			ORDER BY inchikey, db_number, source
+		)
 		INSERT INTO mass_spectra (
 			inchikey, molecular_weight, exact_mass, precursor_mz, precursor_type,
 			ion_mode, collision_energy, spectrum_type, instrument, instrument_type,
 			splash, db_number, source, comments, m_z, peaks
-		) VALUES {placeholders}
+		)
+		SELECT * FROM deduped
 		ON CONFLICT (inchikey, db_number, source) DO UPDATE SET
 			molecular_weight = EXCLUDED.molecular_weight,
 			exact_mass = EXCLUDED.exact_mass,

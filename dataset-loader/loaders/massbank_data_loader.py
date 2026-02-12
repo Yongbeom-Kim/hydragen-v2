@@ -24,14 +24,7 @@ METADATA_KEY_TO_TABLE_KEY = {
 MZ_SCALE = 10_000
 
 
-def _peaks_to_arrays(peaks: list[dict[str, float]]) -> tuple[list[int], list[int]]:
-	"""Convert list of {m/z, intensity} dicts to (m_z int4[], peaks int4[]) for the DB."""
-	m_z_arr = [round(p["m/z"] * MZ_SCALE) for p in peaks]
-	peaks_arr = [round(p["intensity"]) for p in peaks]
-	return m_z_arr, peaks_arr
-
-
-def compound_row_from_metadata(metadata: dict[str, str]) -> dict[str, str] | None:
+def metadata_to_compounds_table_row(metadata: dict[str, str]) -> dict[str, str] | None:
 	"""Build a compounds table row from MassBank metadata. Returns None if any required field is missing."""
 	row = {
 		"inchikey": metadata.get("InChIKey", "").strip(),
@@ -45,7 +38,11 @@ def compound_row_from_metadata(metadata: dict[str, str]) -> dict[str, str] | Non
 	return row
 
 
-def map_metadata_to_table_row(metadata: dict[str, str]) -> dict[str, str | float | None]:
+def data_to_mass_spectra_table_row(
+    metadata: dict[str, str],
+    m_z_arr: list[int],
+    intensity_arr: list[int]
+) -> dict[str, str | float | None]:
 	"""Map MassBank metadata keys to mass_spectra table columns. Drops unmapped keys."""
 	row: dict[str, str | float | None] = {}
 	for meta_key, value in metadata.items():
@@ -59,6 +56,9 @@ def map_metadata_to_table_row(metadata: dict[str, str]) -> dict[str, str | float
 				row[table_key] = None
 		else:
 			row[table_key] = value
+		
+	row["m_z"] = m_z_arr
+	row["peaks"] = intensity_arr
 	return row
 
 
@@ -75,40 +75,35 @@ class MassbankDataLoader(DatasetLoaderBase):
 				compounds_batch: list[dict[str, str]] = []
 				rows_batch: list[dict] = []
 				for raw_item in self._get_dataset_raw_items():
-					metadata, peaks = self._parse_raw_item(raw_item)
-					compound = compound_row_from_metadata(metadata)
+					metadata, (m_z_arr, intensity_arr) = self._parse_raw_item(raw_item)
+					compound = metadata_to_compounds_table_row(metadata)
 					if compound is None:
 						continue
-					row = map_metadata_to_table_row(metadata)
-					if not row.get("inchikey") or row.get("molecular_weight") is None or not row.get("db_number"):
+
+					mass_spec = data_to_mass_spectra_table_row(metadata, m_z_arr, intensity_arr)
+					if not mass_spec.get("inchikey") or mass_spec.get("molecular_weight") is None or not mass_spec.get("db_number"):
 						continue
-					row["source"] = self.uniq_key
-					# Store peaks as int4[]: m/z scaled by 1e4, intensity rounded
-					m_z_arr, peaks_arr = _peaks_to_arrays(peaks)
-					row["m_z"] = m_z_arr
-					row["peaks"] = peaks_arr
+					mass_spec["source"] = self.uniq_key
+					
 					compounds_batch.append(compound)
-					rows_batch.append(row)
+					rows_batch.append(mass_spec)
+
 					if len(rows_batch) >= self.batch_size:
-						# Dedupe so one INSERT doesn't hit the same conflict target twice
-						unique_compounds = list({c["inchikey"]: c for c in compounds_batch}.values())
-						unique_rows = list({(r["inchikey"], r["db_number"], r["source"]): r for r in rows_batch}.values())
-						upsert_compounds_batch(cur, unique_compounds)
-						upsert_mass_spectra_batch(cur, unique_rows)
-						self._row_count += len(rows_batch)
-						print(f"Committed {self._row_count} records so far.", flush=True)
-						conn.commit()
-						if self.batch_delay:
-							time.sleep(self.batch_delay)
+						self.batch_write_to_db(cur, conn, compounds_batch, rows_batch)
 						compounds_batch = []
 						rows_batch = []
 				if rows_batch:
-					unique_compounds = list({c["inchikey"]: c for c in compounds_batch}.values())
-					unique_rows = list({(r["inchikey"], r["db_number"], r["source"]): r for r in rows_batch}.values())
-					upsert_compounds_batch(cur, unique_compounds)
-					upsert_mass_spectra_batch(cur, unique_rows)
-					self._row_count += len(rows_batch)
-				conn.commit()
+					self.batch_write_to_db(cur, conn, compounds_batch, rows_batch)
+
+	def batch_write_to_db(self, cur, conn, compounds_batch: list, rows_batch: list) -> None:
+		"""Upsert one batch of compounds and mass spectra (deduped in SQL), then commit."""
+		upsert_compounds_batch(cur, compounds_batch)
+		upsert_mass_spectra_batch(cur, rows_batch)
+		self._row_count += len(rows_batch)
+		print(f"Committed {self._row_count} records so far.", flush=True)
+		conn.commit()
+		if self.batch_delay:
+			time.sleep(self.batch_delay)
 
 	def _get_dataset_raw_items(self):
 		with open(self.dataset_path, "rb", buffering=1024 * 1024) as f:
@@ -119,13 +114,14 @@ class MassbankDataLoader(DatasetLoaderBase):
 				item_raw.append(line_raw)
 
 	@staticmethod
-	def _parse_raw_item(raw_item: bytes) -> tuple[dict[str, str], list[dict[str, float]]]:
+	def _parse_raw_item(raw_item: bytes) -> tuple[dict[str, str], tuple[list[float], list[float]]]:
 		"""Parse a MassBank record: metadata (Field: Value) and peak data (m/z intensity)."""
 		text = raw_item.decode("utf-8")
 		lines = text.strip().splitlines()
 
 		metadata: dict[str, str] = {}
-		peaks: list[dict[str, float]] = []
+		m_z_arr: list[float] = []
+		intensity_arr: list[int] = []
 
 		for line in lines:
 			line = line.strip()
@@ -140,10 +136,9 @@ class MassbankDataLoader(DatasetLoaderBase):
 				parts = line.split()
 				if len(parts) >= 2:
 					try:
-						mz = float(parts[0])
-						intensity = float(parts[1])
-						peaks.append({"m/z": mz, "intensity": intensity})
+						m_z_arr.append(float(parts[0]))
+						intensity_arr.append(float(parts[1]))
 					except ValueError:
 						pass
 
-		return metadata, peaks
+		return metadata, (m_z_arr, intensity_arr)
