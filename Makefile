@@ -10,20 +10,34 @@ setup: ## Set up local git hooks
 	chmod +x ./.git/hooks/pre-commit
 
 ##@ Docker Compose
-start: ## Start Docker Compose with production config
-	docker compose -f docker-compose.base.yaml -f docker-compose.prod.yaml build
-	docker compose -f docker-compose.base.yaml -f docker-compose.prod.yaml up
+COMPOSE_BASE_PROD = -f docker-compose.base.yaml -f docker-compose.prod.yaml
+COMPOSE_CX23 = $(COMPOSE_BASE_PROD) -f docker-compose.cx23.yaml
 
-start_detached: ## Start Docker Compose with production config
-	docker compose -f docker-compose.base.yaml -f docker-compose.prod.yaml build
-	docker compose -f docker-compose.base.yaml -f docker-compose.prod.yaml up -d
+start: ## Start Docker Compose with production config
+	docker compose $(COMPOSE_BASE_PROD) build
+	docker compose $(COMPOSE_BASE_PROD) up
+
+start_detached: ## Start Docker Compose with production config (detached)
+	docker compose $(COMPOSE_BASE_PROD) build
+	docker compose $(COMPOSE_BASE_PROD) up -d
+
+start-cx23: ## Start production with cx23 resource limits (2 vCPU, 4GB)
+	docker compose $(COMPOSE_CX23) build
+	docker compose $(COMPOSE_CX23) up
+
+start_detached-cx23: ## Start production with cx23 resource limits (detached)
+	docker compose $(COMPOSE_CX23) build
+	docker compose $(COMPOSE_CX23) up -d
 
 dev: ## Build & start Docker Compose with development config
 	docker compose -f docker-compose.base.yaml -f docker-compose.dev.yaml build
 	docker compose -f docker-compose.base.yaml -f docker-compose.dev.yaml up
 
-logs: ## Attach to Docker Compose Logs
-	docker compose -f docker-compose.base.yaml -f docker-compose.prod.yaml logs -f
+logs: ## Attach to Docker Compose logs
+	docker compose $(COMPOSE_BASE_PROD) logs -f
+
+logs-cx23: ## Attach to Docker Compose logs (cx23 stack)
+	docker compose $(COMPOSE_CX23) logs -f
 
 attach-flyway: ## Attach a shell to the Flyway migration container
 	docker container exec --env-file .env -it hydragen-v2-postgres-migrate-1 /bin/bash

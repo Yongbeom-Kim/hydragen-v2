@@ -31,4 +31,4 @@ jobs:
           cat .env
 
       - name: Deploy
-        run: make start_detached
+        run: make start_detached-cx23

@@ -1,7 +1,10 @@
 services:
+
+  postgres:
+
   postgres-migrate:
     command: ["migrate"]
-  
+
   dataset-loader:
     environment:
       - PYTHONUNBUFFERED=1

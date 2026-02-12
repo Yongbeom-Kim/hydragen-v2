@@ -1,0 +1,26 @@
+# Resource profile: 2 vCPU, 4GB RAM (e.g. cx23 / small VPS)
+# Use: docker compose -f docker-compose.base.yaml -f docker-compose.prod.yaml -f docker-compose.cx23.yaml up -d
+services:
+  postgres:
+    cpus: "0.5"
+    mem_limit: 1g
+
+  postgres-migrate:
+    cpus: "0.2"
+    mem_limit: 256m
+
+  dataset-loader:
+    cpus: "0.5"
+    mem_limit: 1g
+
+  server:
+    cpus: "1.0"
+    mem_limit: 1g
+
+  client:
+    cpus: "0.25"
+    mem_limit: 896m
+
+  caddy:
+    cpus: "0.2"
+    mem_limit: 256m
