@@ -32,5 +32,15 @@ New Hetzner Server: https://console.hetzner.com/projects/13384053/servers/120476
   handle /v2* {
     reverse_proxy client:3000
   }
+
+  handle {
+    respond "Not Found" 404
+  }
 }
 ```
+## Tanstack Start
+Basic Tanstack Start App hosted on hydragen.senpailearn.com/v2
+
+## Go Backend
+Basic Go backend hosted on hydragen.senpailearn.com/v2/api
+Healthcheck endpoint on hydragen.senpailearn.com/v2/api/health
