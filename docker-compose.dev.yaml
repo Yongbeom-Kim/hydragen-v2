@@ -43,6 +43,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
       target: dev
+      # target: runtime
     volumes:
       - ./client:/app
     ports:

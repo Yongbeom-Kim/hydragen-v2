@@ -13,7 +13,10 @@
   }
 
   handle /v2* {
-    uri strip_prefix /v2
     reverse_proxy client:3000
+  }
+
+  handle {
+    respond "Not Found" 404
   }
 }
