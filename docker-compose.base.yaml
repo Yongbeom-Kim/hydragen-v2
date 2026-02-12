@@ -54,3 +54,5 @@ services:
       - ".env"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../.hydragen-v2/caddy/data:/data
+      - ../.hydragen-v2/caddy/config:/config
