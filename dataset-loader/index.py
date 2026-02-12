@@ -3,7 +3,8 @@ from loaders.massbank_data_loader import MassbankDataLoader
 loaders = [
 	MassbankDataLoader(
 		'MassBankDataLoader',
-		'https://github.com/MassBank/MassBank-data/releases/download/2025.10/MassBank_NISTformat.msp'
+		'https://github.com/MassBank/MassBank-data/releases/download/2025.10/MassBank_NISTformat.msp',
+		batch_size=10,
 	)
 ]
 
