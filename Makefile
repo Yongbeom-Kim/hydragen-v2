@@ -22,6 +22,9 @@ dev: ## Build & start Docker Compose with development config
 	docker compose -f docker-compose.base.yaml -f docker-compose.dev.yaml build
 	docker compose -f docker-compose.base.yaml -f docker-compose.dev.yaml up
 
+logs: ## Attach to Docker Compose Logs
+	docker compose -f docker-compose.base.yaml -f docker-compose.prod.yaml logs -f
+
 attach-flyway: ## Attach a shell to the Flyway migration container
 	docker container exec --env-file .env -it hydragen-v2-postgres-migrate-1 /bin/bash
 
