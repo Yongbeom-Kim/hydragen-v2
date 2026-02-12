@@ -13,6 +13,7 @@
   }
 
   handle /v2* {
+    uri strip_prefix /v2
     reverse_proxy client:3000
   }
 }
