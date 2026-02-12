@@ -11,6 +11,9 @@ jobs:
     name: 'Deploy to Prod'
     runs-on: 'prod'
     steps:
+      - name: Prune docker volumes
+        run: |
+          docker system prune -af
       - name: Checkout
         uses: actions/checkout@v6
       - name: 'Create env file'
