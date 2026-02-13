@@ -9,8 +9,24 @@ services:
       retries: 200
   
   postgres-migrate:
+    command: ["migrate"]
+    stdin_open: true
+    tty: true
+
+  postgres-migrate-shell:
+    image: redgate/flyway:12.0-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-migrate:
+        condition: service_completed_successfully
+    env_file:
+      - ".env"
+    volumes:
+      - ./flyway/sql:/flyway/sql
+      - ./flyway/conf:/flyway/conf
     entrypoint: []
-    command: ["/bin/sh", "-c", "flyway migrate; echo 'flyway ready'; while true; do sleep 3600; done"]
+    command: ["/bin/sh", "-c", "echo 'flyway shell ready'; while true; do sleep 3600; done"]
     stdin_open: true
     tty: true
   
@@ -23,9 +39,6 @@ services:
       - ./dataset-loader:/app/dataset-loader
     stdin_open: true
     tty: true
-    depends_on:
-      postgres-migrate:
-        condition: service_started
 
   server:
     build:

@@ -12,6 +12,7 @@ setup: ## Set up local git hooks
 ##@ Docker Compose
 COMPOSE_BASE_PROD = -f docker-compose.base.yaml -f docker-compose.prod.yaml
 COMPOSE_CX23 = $(COMPOSE_BASE_PROD) -f docker-compose.cx23.yaml
+COMPOSE_DEV = -f docker-compose.base.yaml -f docker-compose.dev.yaml
 
 start: ## Start Docker Compose with production config
 	docker compose $(COMPOSE_BASE_PROD) build
@@ -30,8 +31,8 @@ start_detached-cx23: ## Start production with cx23 resource limits (detached)
 	docker compose $(COMPOSE_CX23) up -d
 
 dev: ## Build & start Docker Compose with development config
-	docker compose -f docker-compose.base.yaml -f docker-compose.dev.yaml build
-	docker compose -f docker-compose.base.yaml -f docker-compose.dev.yaml up
+	docker compose $(COMPOSE_DEV) build
+	docker compose $(COMPOSE_DEV) up
 
 logs: ## Attach to Docker Compose logs
 	docker compose $(COMPOSE_BASE_PROD) logs -f
@@ -39,8 +40,8 @@ logs: ## Attach to Docker Compose logs
 logs-cx23: ## Attach to Docker Compose logs (cx23 stack)
 	docker compose $(COMPOSE_CX23) logs -f
 
-attach-flyway: ## Attach a shell to the Flyway migration container
-	docker container exec --env-file .env -it hydragen-v2-postgres-migrate-1 /bin/bash
+attach-flyway: ## Attach a shell to the Flyway debug container
+	docker container exec --env-file .env -it hydragen-v2-postgres-migrate-shell-1 /bin/sh
 
 attach-dataset-loader: ## Attach a shell to the dataset-loader container
 	docker container exec --env-file .env -it hydragen-v2-dataset-loader-1 /bin/sh
@@ -48,8 +49,9 @@ attach-dataset-loader: ## Attach a shell to the dataset-loader container
 attach-postgres: ## Attach a shell to the Postgres container
 	docker container exec --env-file .env -it hydragen-v2-postgres-1 /bin/bash
 
-stop: ## Stop Docker Compose development stack
-	docker compose -f docker-compose.base.yaml down
+stop: ## Stop Docker Compose development and production stacks
+	docker compose $(COMPOSE_DEV) down || true
+	docker compose $(COMPOSE_BASE_PROD) down || true
 
 ##@ Cleaning
 

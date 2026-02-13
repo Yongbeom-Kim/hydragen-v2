@@ -9,9 +9,6 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     command: ["python", "./index.py"]
-    depends_on:
-      postgres-migrate:
-        condition: service_completed_successfully
 
   server:
     build:
