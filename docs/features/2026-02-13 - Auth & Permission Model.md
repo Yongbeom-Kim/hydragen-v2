@@ -1,87 +1,126 @@
 # 2026-02-13 - Auth & Permission Model
 
-This document explains the **Authentication** and **Authorization** model of **Hydragen V2**: in short, who can do what.
+This document defines the Authentication and Authorization model for Hydragen V2.
+Goal: strict syllabus adherence with explicit, enforceable access rules.
 
-## **Core Policy**
+## Core Policy
 
 > [!IMPORTANT]
-> **About Classroom Adoption**
-> - Introducing a new classroom tool may be difficult if the tool does not adhere to classroom syllabus, or the stated learning outcomes.
-> - Therefore, we treat strict **Syllabus Adherence** is a core product requirement, not a nice-to-have.
-> - The **Instructor** will control session scope so the tool matches the actual teaching plan. 
-> - Instructors first **limit** the freedoms and scope for the problems within Hydragen. Then, we will take over and **personalize instruction** within this defined space.
+> Syllabus adherence is a hard product requirement.
+> Instructors define session scope first; personalization happens only inside that scope.
 
-### **Roles**
+## Authentication
 
-Everyone belongs to one of three **Roles**:
+- Authentication is handled by [`authentik`](https://goauthentik.io/) via [`OIDC`](https://openid.net/connect/).
+- Global role claims come from the IdP token.
 
-1. **Student**
-2. **Instructor**
-3. **Admin**
+## Authorization Model
 
-Everyone starts as a **Student** (except the SenpaiLearn/Hydragen team, which starts as **Admin**).
+Authorization is deny-by-default and uses intersection checks:
 
-- **Admins** can promote Students -> Instructors and Instructors -> Admins.
-- **Instructors** can manage Sessions and invite Students.
-- **Students** can be invited to Sessions.
+1. Global role claim (Student, Instructor, Admin) grants capability class.
+2. Session membership in the application database grants access to a specific session.
+3. Request is allowed only if all required checks pass.
 
-> [!NOTE]
-> **Technical Details**
-> - **Authentication** is handled by **[`authentik`](https://goauthentik.io/)** using **[`OIDC`](https://openid.net/connect/)**.
-> - **Authorization** is split between:
->   - **Global Role Claims** (provided by the **Identity Provider (IdP)**)
->   - **Session-Level Rules** (stored in the **Application Database**)
+Rules:
+- Session membership stores membership only (no per-session role field).
+- Every session-protected endpoint must re-check membership in the database per request.
+- If no allowed skills are selected in a session, return no spectra.
 
-### **Sessions**
+## Roles
 
-A **Session** is essentially a semester-long class.
-When an **Instructor** (or **Admin**) creates a **Session**, they define a **Syllabus**.
+Global roles:
 
-A **Syllabus** is a collection of **Skills**.
+1. Student
+2. Instructor
+3. Admin
 
-A **Skill** is a specific, actionable learning outcome the student should learn.
-In **Mass Spectrometry (M/S)**, some examples of skills are:
+Defaults and powers:
+- Everyone starts as Student, except internal Hydragen team bootstrap admins.
+- Admins can promote/demote roles.
+- Instructors can manage sessions they belong to.
+- Students can participate in sessions they belong to.
 
-1. Identification of isotope patterns
-2. Identification of common fragments with mass X
-3. Application of the Nitrogen rule
+Admin safety controls:
+- The last remaining Admin cannot be demoted or removed.
+- Self-demotion is allowed only if at least one other Admin remains.
+- Long-term: require two-admin approval for Instructor -> Admin promotion.
 
-By selecting a collection of **Skills** in a **Session**, instructors can narrow the question set to what is relevant for that course.
+## Session Model
 
-Over time, the **Instructor** can progressively broaden the **Skills** included in that **Session**.
+A session is a course container (for example, semester-long).
+When an Instructor or Admin creates a session, they define an allowed skill set.
 
-### **Session-Scoped Peak Curriculum**
+Skill model:
+- Skills are the only curriculum scope control.
+- Session-visible spectra are derived from `allowedSkills`.
+- We maintain an index: `Skill -> Molecule/Spectrum`.
+- Empty `allowedSkills` means restricted mode (no spectra).
 
-Each **Instructor** can choose which **Skills** are in a particular **Session**.
-This selection restricts which molecules and their spectra are available in that **Session**.
+Membership and management model:
+- Session creator is automatically added as a session member.
+- Any other user (including Instructors) must be invited/added to join.
+- Session mutation (membership and allowed skills) requires:
+  - global role in `{Instructor, Admin}`
+  - and active membership in that session.
 
-Practical effect:
-- If a peak is included in the **Session Curriculum**, related spectra can appear.
-- If a peak is not included, related spectra are excluded from that **Session**.
+## Invite and Membership Lifecycle
 
-This gives instructors direct control over content scope and progression.
+Hybrid invite model:
+- Existing registered users can be directly added as members.
+- New or unregistered users receive a tokenized invite.
 
-> [!NOTE]
-> **Technical Details**
-> - We maintain an index: **`Skill Usage -> Molecule Spectrum`**.
-> - Each **Session** stores its own set of allowed **Skills**.
-> - Session-visible spectra are computed from that allowed peak set.
-> - Recommended default policy: if no skills are selected, show no spectra (**restricted mode**).
+Tokenized invite policy:
+- Single-use token.
+- Expires in 7 days.
+- Revocable by Instructor/Admin session managers before acceptance.
 
+Removal policy:
+- On member removal, access is revoked immediately for new API requests.
+- Existing tokens are not force-revoked; protected endpoints rely on per-request membership checks.
 
-### **Permission Endpoints**
+## Endpoint Policy
 
-- Only **Instructors** and **Admins** can create and configure sessions.
-- **Students** can participate, but cannot change membership or curriculum scope.
-- **Admins** handle instructor role promotion/demotion.
+Session endpoints:
+- `POST /sessions` -> Global `Instructor` or `Admin`.
+- `POST /sessions/{id}/members` -> Global `Instructor` or `Admin`, and session member.
+- `DELETE /sessions/{id}/members/{userId}` -> Global `Instructor` or `Admin`, and session member.
+- `PUT /sessions/{id}/allowed-skills` -> Global `Instructor` or `Admin`, and session member.
+- `GET /sessions/{id}/allowed-skills` -> Session member or global `Admin`.
+- `GET /sessions/{id}/mass-spectra` -> Session member or global `Admin`; response filtered by `allowedSkills`.
 
-> [!NOTE]
-> **Technical Details**
-> - **`POST /sessions`** -> **Instructor/Admin**
-> - **`POST /sessions/{id}/members`** -> **Instructor-of-session/Admin**
-> - **`DELETE /sessions/{id}/members/{userId}`** -> **Instructor-of-session/Admin**
-> - **`PUT /sessions/{id}/allowed-peaks`** -> **Instructor-of-session/Admin**
-> - **`GET /sessions/{id}/allowed-peaks`** -> **Session Member/Admin**
-> - **`GET /sessions/{id}/mass-spectra`** -> Session-filtered spectra only
-> - **`POST /admin/roles/instructors/{userId}`** -> **Admin only**
-> - **`DELETE /admin/roles/instructors/{userId}`** -> **Admin only**
+Invite endpoints:
+- `POST /sessions/{id}/invites` -> Global `Instructor` or `Admin`, and session member.
+- `POST /sessions/{id}/invites/{inviteId}/revoke` -> Global `Instructor` or `Admin`, and session member.
+- `POST /invites/{token}/accept` -> Authenticated invited user; token must be valid, unexpired, and unused.
+
+Admin role endpoints:
+- `POST /admin/roles/instructors/{userId}` -> Admin only.
+- `DELETE /admin/roles/instructors/{userId}` -> Admin only.
+- `POST /admin/roles/admins/{userId}` -> Admin only.
+- `DELETE /admin/roles/admins/{userId}` -> Admin only, but cannot remove last Admin.
+
+## Audit Logging Requirements
+
+Must be audit logged:
+- Role changes (all admin/instructor promote/demote events).
+- Session create/delete.
+- Session membership add/remove.
+- Session `allowedSkills` changes.
+
+Each log record should include:
+- Acting user ID.
+- Target resource/user ID.
+- Action type.
+- Timestamp.
+- Result (success/denied).
+
+## Assumptions and Future Work
+
+Current assumption:
+- Single-tenant deployment for now.
+- Session boundaries are the primary access boundary at current scale.
+
+Future work:
+- Add explicit organization/tenant boundaries for multi-school deployments.
+- Add stronger privileged-role workflows (for example, two-admin approval).
