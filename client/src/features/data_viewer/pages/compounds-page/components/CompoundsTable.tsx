@@ -110,12 +110,26 @@ export function CompoundsTable({
 							table.getRowModel().rows.map((row) => (
 								<tr
 									key={row.id}
-									onClick={() =>
-										navigate({
-											to: "/data/compounds/$inchiHash",
-											params: { inchiHash: row.original.inchiKey },
-										})
-									}
+									onClick={(e) => {
+										const path = `/v2/data/compounds/${row.original.inchiKey}`;
+										if (e.ctrlKey || e.metaKey) {
+											window.open(path, "_blank");
+										} else {
+											navigate({
+												to: "/data/compounds/$inchiHash",
+												params: { inchiHash: row.original.inchiKey },
+											});
+										}
+									}}
+									onAuxClick={(e) => {
+										if (e.button === 1) {
+											e.preventDefault();
+											window.open(
+												`/v2/data/compounds/${row.original.inchiKey}`,
+												"_blank",
+											);
+										}
+									}}
 									style={{ cursor: "pointer" }}
 								>
 									{row.getVisibleCells().map((cell, index) => (
