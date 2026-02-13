@@ -70,7 +70,6 @@ function MassSpectrumMetadataAccordion({ spectrum }: Props) {
 
 	return (
 		<AccordionGroup
-			transition="0.2s"
 			variant="outlined"
 			sx={{
 				borderRadius: "lg",
