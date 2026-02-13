@@ -3,6 +3,10 @@
 This document defines the Authentication and Authorization model for Hydragen V2.
 Goal: strict syllabus adherence with explicit, enforceable access rules.
 
+## Related Document
+
+- [2026-02-13 - Mass Spectrometry Skills](./2026-02-13%20-%20Mass%20Spectrometry%20Skills.md)
+
 ## Core Policy
 
 > [!IMPORTANT]
