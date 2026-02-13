@@ -3,6 +3,10 @@
 This document defines the skill model for Hydragen V2 mass spectrometry learning.
 It is the curriculum layer referenced by session authorization (`allowedSkills`).
 
+## Related Document
+
+- [2026-02-13 - Question Generation Recommendation (Track A)](./2026-02-13%20-%20Question%20Generation%20Recommendation%20%28Track%20A%29.md)
+
 ## Goals
 
 - Represent classroom-relevant learning outcomes as explicit, reusable skills.
