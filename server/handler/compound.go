@@ -32,6 +32,12 @@ func (a *App) GetCompoundListHandler(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 	compounds, err := db.ListCompounds(ctx, a.Db, page, pageSize, a.UseFallbackData())
+	if err != nil {
+		slog.Error("[GetCompoundListHandler]: db.ListCompounds error", "error", err, "page", page, "pageSize", pageSize)
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+	compounds = utils.Map(compounds, func(c domain.CompoundMetadata) domain.CompoundMetadata { return c.AddImageUrl() })
 	count, err := db.CountCompounds(ctx, a.Db, a.UseFallbackData())
 	if err != nil {
 		slog.Error("[GetCompoundListHandler]: db.ListCompounds error", "error", err, "page", page, "pageSize", pageSize)
@@ -79,6 +85,7 @@ func (a *App) GetCompoundDetailHandler(w http.ResponseWriter, r *http.Request) {
 		Formula:         record.Formula,
 		HasMassSpectrum: record.HasMassSpectrum,
 	}
+	response = response.AddImageUrl()
 
 	slog.Info("[GetCompoundDetailHandler]: successful response", "inchiKey", inchiKey)
 	utils.WriteJSON(w, http.StatusOK, response)

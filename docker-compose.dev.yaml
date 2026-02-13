@@ -47,6 +47,9 @@ services:
       target: dev
     volumes:
       - ./server:/app
+    environment:
+      # If we add quotes here, it will show up in the enviornment variable 
+      - SITE_ADDR=http://localhost:3111
     stdin_open: true
     tty: true
 

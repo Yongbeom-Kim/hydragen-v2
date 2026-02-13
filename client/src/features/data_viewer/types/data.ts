@@ -6,6 +6,7 @@ export type CompoundListItem = {
 	formula: string;
 	molecularWeight: number | null;
 	hasMassSpectrum: boolean;
+	imageUrl: string;
 };
 
 export type CompoundsResponse = {
@@ -22,6 +23,7 @@ export type CompoundDetail = {
 	smiles: string;
 	formula: string;
 	hasMassSpectrum: boolean;
+	imageUrl: string;
 	massSpectrumHref?: string;
 };
 

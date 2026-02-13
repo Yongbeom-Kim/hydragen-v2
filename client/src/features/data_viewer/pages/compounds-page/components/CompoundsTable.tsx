@@ -27,6 +27,31 @@ const columns = [
 		header: "Compound",
 		cell: (info) => info.getValue(),
 	}),
+	columnHelper.accessor("imageUrl", {
+		header: "Image",
+		cell: (info) => {
+			const { imageUrl, name } = info.row.original;
+			return (
+				<Box
+					component="img"
+					src={imageUrl}
+					alt={name}
+					loading="lazy"
+					sx={{
+						width: "auto",
+						height: "auto",
+						maxHeight: "100px",
+						borderRadius: "sm",
+						objectFit: "contain",
+						bgcolor: "background.level1",
+						border: "1px solid",
+						borderColor: "divider",
+						p: 0.5,
+					}}
+				/>
+			);
+		},
+	}),
 	columnHelper.accessor("formula", {
 		header: "Formula",
 	}),
@@ -134,7 +159,7 @@ export function CompoundsTable({
 								>
 									{row.getVisibleCells().map((cell, index) => (
 										<td key={cell.id}>
-											{index === 0 ? (
+											{cell.column.id === "name" ? (
 												<JoyLink
 													sx={{ textDecoration: "none", fontWeight: 700 }}
 												>

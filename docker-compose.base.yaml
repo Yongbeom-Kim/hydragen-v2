@@ -40,6 +40,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ".env"
+    volumes:
+      - ../.hydragen-v2/volumes/server/assets:/app/assets
     expose:
       - "8080"
     depends_on:
@@ -65,5 +67,5 @@ services:
       - ".env"
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ../.hydragen-v2/caddy/data:/data
-      - ../.hydragen-v2/caddy/config:/config
+      - ../.hydragen-v2/volumes/caddy/data:/data
+      - ../.hydragen-v2/volumes/caddy/config:/config

@@ -33,6 +33,7 @@ func main() {
 	mux.HandleFunc("GET /health", application.HealthHandler)
 	mux.HandleFunc("GET /compounds", application.GetCompoundListHandler)
 	mux.HandleFunc("GET /compounds/{inchiKey}", application.GetCompoundDetailHandler)
+	mux.HandleFunc("GET /compounds/{inchiKey}/image", application.GetCompoundImageHandler)
 	mux.HandleFunc("GET /mass-spectra/{inchiKey}", application.GetMassSpectraHandler)
 
 	server := &http.Server{

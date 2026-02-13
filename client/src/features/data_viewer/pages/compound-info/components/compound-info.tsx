@@ -1,4 +1,5 @@
 import {
+	Box,
 	Card,
 	Chip,
 	Divider,
@@ -22,10 +23,29 @@ export function CompoundInfo({ inchiHash }: Props) {
 		);
 	}
 
-	const { name, inchiKey, hasMassSpectrum } = data;
+	const { name, inchiKey, hasMassSpectrum, imageUrl } = data;
 	return (
 		<Card size="lg" variant="outlined" sx={{ mt: 2, gap: 1.5 }}>
-			<Typography level="h2">{name}</Typography>
+			<Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
+				<Box
+					component="img"
+					src={imageUrl}
+					alt={name}
+					loading="lazy"
+					sx={{
+						width: 112,
+						height: 112,
+						borderRadius: "md",
+						objectFit: "contain",
+						bgcolor: "background.level1",
+						border: "1px solid",
+						borderColor: "divider",
+						p: 0.5,
+						flexShrink: 0,
+					}}
+				/>
+				<Typography level="h2">{name}</Typography>
+			</Stack>
 			<Typography level="body-sm">InChIKey: {inchiKey}</Typography>
 			<Typography>
 				<strong>Formula:</strong> {data.formula}

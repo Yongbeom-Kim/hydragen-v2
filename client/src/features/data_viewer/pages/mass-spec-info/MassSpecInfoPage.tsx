@@ -31,9 +31,28 @@ export function MassSpecInfoPageComponent({
 
 	return (
 		<Box sx={{ maxWidth: 1100, mx: "auto", px: 2, py: 3 }}>
-			<Typography level="h1">
-				Mass Spectra: {data?.name || data?.formula}
-			</Typography>
+			<Stack direction="row" spacing={2} sx={{ alignItems: "center", mb: 2 }}>
+				<Box
+					component="img"
+					src={data.imageUrl}
+					alt={data.name}
+					loading="lazy"
+					sx={{
+						width: 96,
+						height: 96,
+						borderRadius: "md",
+						objectFit: "contain",
+						bgcolor: "background.level1",
+						border: "1px solid",
+						borderColor: "divider",
+						p: 0.5,
+						flexShrink: 0,
+					}}
+				/>
+				<Typography level="h1">
+					Mass Spectra: {data?.name || data?.formula}
+				</Typography>
+			</Stack>
 			<MassSpecInfoPageComponentInner inchiHash={inchiHash} />
 		</Box>
 	);

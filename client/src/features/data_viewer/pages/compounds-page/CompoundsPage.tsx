@@ -11,7 +11,7 @@ export function CompoundsPage({
 	pageSize: number;
 }) {
 	return (
-		<Box sx={{ maxWidth: 1200, mx: "auto", px: 2, py: 3 }}>
+		<Box sx={{ width: "100%", px: 2, py: 3 }}>
 			<Typography level="h1">Compounds Data</Typography>
 			<CompoundsPageData page={page} pageSize={pageSize} />
 		</Box>

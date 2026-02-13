@@ -7,3 +7,13 @@ func Map[T interface{}, S interface{}](arr []T, f func(T) S) []S {
 	}
 	return newArr
 }
+
+func Filter[T interface{}](arr []T, f func(T) bool) []T {
+	var newArr []T
+	for _, t := range arr {
+		if f(t) {
+			newArr = append(newArr, t)
+		}
+	}
+	return newArr
+}
