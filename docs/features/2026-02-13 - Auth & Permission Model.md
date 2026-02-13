@@ -9,7 +9,7 @@ This document explains the **Authentication** and **Authorization** model of **H
 > - Introducing a new classroom tool may be difficult if the tool does not adhere to classroom syllabus, or the stated learning outcomes.
 > - Therefore, we treat strict **Syllabus Adherence** is a core product requirement, not a nice-to-have.
 > - The **Instructor** will control session scope so the tool matches the actual teaching plan. 
-> - Instructors first **limit** the freedoms and scope for the problems within the platform. Then, we will take over and **personalize instruction** within this extra space.
+> - Instructors first **limit** the freedoms and scope for the problems within Hydragen. Then, we will take over and **personalize instruction** within this defined space.
 
 ### **Roles**
 
