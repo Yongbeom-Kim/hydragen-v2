@@ -27,7 +27,7 @@ jobs:
           echo FLYWAY_USER=${{ secrets.POSTGRES_USER }} >> .env
 
           echo FLYWAY_URL=jdbc:postgresql://postgres:5432/postgres >> .env
-          echo SITE_ADDR=hydragen.senpailearn.com >> .env
+          echo SITE_ADDR=https://hydragen.senpailearn.com >> .env
           cat .env
 
       - name: Deploy
