@@ -1,12 +1,12 @@
-FROM golang:1.24-alpine AS dev
+FROM golang:1.25-alpine AS dev
 WORKDIR /app
 COPY go.mod ./
 RUN go mod download
 COPY . .
 EXPOSE 8080
-CMD ["go", "run", "./main.go"]
+CMD ["go", "tool", "air"]
 
-FROM golang:1.24-alpine AS build
+FROM golang:1.25-alpine AS build
 WORKDIR /app
 COPY go.mod ./
 RUN go mod download

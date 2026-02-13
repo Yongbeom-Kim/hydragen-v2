@@ -34,7 +34,6 @@ services:
       target: dev
     volumes:
       - ./server:/app
-    command: ["go", "run", "./main.go"]
     stdin_open: true
     tty: true
 
