@@ -42,13 +42,13 @@ func (a *App) GetCompoundImageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	imageSource := "chembl"
-	data, mimeType, err := chembl.GetChemblImage(*compound)
+	data, mimeType, err := chembl.GetChemblImage(ctx, a.Db, *compound)
 	if err != nil || len(data) == 0 {
 		if err != nil && !errors.Is(err, io.EOF) {
 			slog.Warn("[GetCompoundImageHandler]: GetChemblImage error", "inchiKey", inchiKey, "error", err)
 		}
 		imageSource = "cactus"
-		data, mimeType, err = cactus.GetCactusImage(*compound)
+		data, mimeType, err = cactus.GetCactusImage(ctx, a.Db, *compound)
 	}
 	if err != nil || len(data) == 0 {
 		if err != nil && !errors.Is(err, io.EOF) {
