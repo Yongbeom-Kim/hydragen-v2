@@ -21,6 +21,10 @@ type compoundsListResponse struct {
 }
 
 func (a *App) GetCompoundListHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	slog.Info("[GetCompoundListHandler]: start", "method", r.Method, "path", r.URL.Path, "rawQuery", r.URL.RawQuery)
+	defer slog.Info("[GetCompoundListHandler]: end", "method", r.Method, "path", r.URL.Path, "duration", time.Since(start))
+
 	query := r.URL.Query()
 	page := utils.ParsePositiveInt(query.Get("page"), 1)
 	pageSize := utils.ParsePositiveInt(query.Get("pageSize"), 20)
@@ -41,6 +45,10 @@ func (a *App) GetCompoundListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) GetCompoundDetailHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	slog.Info("[GetCompoundDetailHandler]: start", "method", r.Method, "path", r.URL.Path)
+	defer slog.Info("[GetCompoundDetailHandler]: end", "method", r.Method, "path", r.URL.Path, "duration", time.Since(start))
+
 	inchiKey := r.PathValue("inchiKey")
 	if inchiKey == "" {
 		slog.Error("[GetCompoundDetailHandler]: Empty inchiKey", "inchiKey", inchiKey)

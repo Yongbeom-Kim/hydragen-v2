@@ -18,6 +18,10 @@ type massSpectrumResponse struct {
 }
 
 func (a *App) GetMassSpectraHandler(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	slog.Info("[GetMassSpectraHandler]: start", "method", r.Method, "path", r.URL.Path)
+	defer slog.Info("[GetMassSpectraHandler]: end", "method", r.Method, "path", r.URL.Path, "duration", time.Since(start))
+
 	inchiKey := strings.TrimSpace(r.PathValue("inchiKey"))
 	if inchiKey == "" {
 		slog.Error("[GetMassSpectraHandler]: Empty inchiKey", "inchiKey", inchiKey)
