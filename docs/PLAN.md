@@ -24,8 +24,8 @@
 - [2026-02-08 - Mass Spec Database from Massbank (~100k molecules)](./features/2026-02-08%20-%20Mass%20Spec%20Database%20from%20Massbank%20(~100k%20molecules))
 - [2026-02-09 - CI/CD + Infrastructure + Deployment](./features/2026-02-09%20-%20CICD%20+%20Infrastructure%20+%20Deployment.md)
 - [2026-02-13 - Mass Spec CRUD Frontend (MVP For Graph Display)](./features/2026-02-13%20-%20Mass%20Spec%20CRUD%20Frontend%20(MVP%20For%20Graph%20Display).md)
-- Telemetry Exploration
-	- What data can/should we collect? What can we interpret from the data?
+- WIP: [2026-02-13 - Telemetry Exploration](./features/2026-02-13%20-%20Telemetry%20Exploration.md)
+- WIP: [2026-02-13 - Auth & Permission Model](./features/2026-02-13%20-%20Auth%20&%20Permission%20Model.md)
 - MVP: Question generation + ELO system (same as Hydragen V1)
 	- Though, I’m not so sure the MCQ is the right system
 - Allow instructors to scope students’ questions to be roughly aligned with curricula
