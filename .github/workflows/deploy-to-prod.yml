@@ -29,8 +29,12 @@ jobs:
           echo FLYWAY_URL=jdbc:postgresql://postgres:5432/postgres >> .env
           echo SITE_ADDR=https://hydragen.senpailearn.com >> .env
 
-          echo PG_PASS=${{ secrets.PG_PASS }} >> .env
-          echo AUTHENTIK_SECRET_KEY=${{ secrets.AUTHENTIK_SECRET_KEY }} >> .env
+          echo KEYCLOAK_POSTGRES_DB=${{ secrets.KEYCLOAK_POSTGRES_DB }} >> .env
+          echo KEYCLOAK_POSTGRES_USER=${{ secrets.KEYCLOAK_POSTGRES_USER }} >> .env
+          echo KEYCLOAK_POSTGRES_PASSWORD=${{ secrets.KEYCLOAK_POSTGRES_PASSWORD }} >> .env
+          echo KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME=${{ secrets.KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME }} >> .env
+          echo KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD }} >> .env
+          
           cat .env
 
       - name: Deploy
