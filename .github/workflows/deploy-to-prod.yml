@@ -28,6 +28,9 @@ jobs:
 
           echo FLYWAY_URL=jdbc:postgresql://postgres:5432/postgres >> .env
           echo SITE_ADDR=https://hydragen.senpailearn.com >> .env
+
+          echo PG_PASS=${{ secrets.PG_PASS }} >> .env
+          echo AUTHENTIK_SECRET_KEY=${{ secrets.AUTHENTIK_SECRET_KEY }} >> .env
           cat .env
 
       - name: Deploy

@@ -15,8 +15,66 @@ Goal: strict syllabus adherence with explicit, enforceable access rules.
 
 ## Authentication
 
-- Authentication is handled by [`authentik`](https://goauthentik.io/) via [`OIDC`](https://openid.net/connect/).
-- Global role claims come from the IdP token.
+- Authentication is handled by [`Keycloak`](https://www.keycloak.org/) via [`OIDC`](https://openid.net/connect/).
+- Global role claims come from Keycloak role claims in the IdP token.
+
+### Keycloak Setup (Realm: `hydragen`)
+
+Realm baseline:
+- Realm name: `hydragen`
+- User registration: disabled by default (invitation/onboarding controlled by Hydragen flows)
+- Email verification: enabled
+- Brute force detection: enabled
+- Login methods: username + email (social IdP optional later)
+
+Clients:
+- `hydragen-web` (public client, SPA):
+  - Standard flow (Authorization Code + PKCE) enabled
+  - Direct access grants disabled
+  - Valid redirect URIs and web origins limited to Hydragen frontend domains
+- `hydragen-api` (bearer-only/confidential resource server):
+  - No browser login
+  - Validates access tokens from `hydragen-web`
+- `hydragen-admin-cli` (confidential, service account):
+  - Used only for operational/admin automation (least privilege)
+
+Realm roles:
+- `student` (default realm role for new users)
+- `instructor`
+- `admin`
+
+Role mapping policy:
+- Hydragen application roles map 1:1 from Keycloak realm roles:
+  - `Student` -> `student`
+  - `Instructor` -> `instructor`
+  - `Admin` -> `admin`
+- API authorization logic normalizes to app casing and treats unknown/missing roles as deny-by-default.
+
+Token and claim requirements:
+- Access token must include:
+  - `sub` as immutable user identifier
+  - realm roles (`realm_access.roles`) for global role checks
+  - `email` and `email_verified` for invite/identity workflows
+- Add protocol mappers only for required claims; avoid large token payloads.
+- Prefer short-lived access tokens with refresh-token rotation.
+
+Scopes:
+- Keep scopes minimal (`openid profile email`).
+- Do not encode session membership in Keycloak scopes or roles.
+- Session membership remains authoritative in Hydragen DB and must be checked per request.
+
+Groups (optional, not authorization-critical):
+- Groups may be used for operational convenience (cohort/import management).
+- Groups must not replace session membership checks.
+
+Admin and safety controls in Keycloak:
+- Only `admin` role can assign/remove `instructor` and `admin` roles.
+- Enforce "last admin cannot be removed" in Hydragen API business logic.
+- Restrict Keycloak admin-console access to trusted operators; use MFA for admin accounts.
+
+Operational recommendation:
+- Manage realm config as code (realm export + version control) and promote across environments.
+- Keep environment-specific items externalized (hostnames, client secrets, redirect URIs).
 
 ## Authorization Model
 

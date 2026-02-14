@@ -69,3 +69,45 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ../.hydragen-v2/volumes/caddy/data:/data
       - ../.hydragen-v2/volumes/caddy/config:/config
+
+  # keycloak
+  keycloak_postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${KEYCLOAK_POSTGRES_DB:?KEYCLOAK_POSTGRES_DB is not set}
+      POSTGRES_USER: ${KEYCLOAK_POSTGRES_USER:?KEYCLOAK_POSTGRES_USER is not set}
+      POSTGRES_PASSWORD: ${KEYCLOAK_POSTGRES_PASSWORD:?KEYCLOAK_POSTGRES_PASSWORD is not set}
+    volumes:
+      - ../.hydragen-v2/volumes/keycloak/postgresql/data:/var/lib/postgresql/data
+
+  keycloak_server:
+    image: quay.io/keycloak/keycloak:26.5.3
+    command:
+      - start
+      - --import-realm
+      - --http-enabled=true
+      - --proxy-headers=xforwarded
+      - --hostname-strict=false
+      - --db=postgres
+      - --db-url=jdbc:postgresql://keycloak_postgres:5432/${KEYCLOAK_POSTGRES_DB:?KEYCLOAK_POSTGRES_DB is not set}
+      - --db-username=${KEYCLOAK_POSTGRES_USER:?KEYCLOAK_POSTGRES_USER is not set}
+      - --db-password=${KEYCLOAK_POSTGRES_PASSWORD:?KEYCLOAK_POSTGRES_PASSWORD is not set}
+      - --health-enabled=true
+      - --http-relative-path=/v2/auth
+      - --bootstrap-admin-password=${KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD:?KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD is not set}
+      - --bootstrap-admin-username=${KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME:?KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME is not set}
+    restart: unless-stopped
+    depends_on:
+      keycloak_postgres:
+        condition: service_started
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import:ro
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s

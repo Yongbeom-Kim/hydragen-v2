@@ -16,6 +16,10 @@
     reverse_proxy client:3000
   }
 
+  handle /v2/auth* {
+    reverse_proxy keycloak_server:8080
+  }
+
   handle {
     respond "Not Found" 404
   }
