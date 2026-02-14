@@ -32,11 +32,11 @@ Clients:
   - Standard flow (Authorization Code + PKCE) enabled
   - Direct access grants disabled
   - Valid redirect URIs and web origins limited to Hydragen frontend domains
-- `hydragen-api` (bearer-only/confidential resource server):
-  - No browser login
-  - Validates access tokens from `hydragen-web`
-- `hydragen-admin-cli` (confidential, service account):
-  - Used only for operational/admin automation (least privilege)
+- `hydragen-api`:
+  - Used as API/resource audience in server-side token validation
+  - No browser login flow
+- `hydragen-admin-cli` (optional, currently not required):
+  - Add later only if we need non-interactive automation against Keycloak Admin APIs
 
 Realm roles:
 - `student` (default realm role for new users)
@@ -49,12 +49,15 @@ Role mapping policy:
   - `Instructor` -> `instructor`
   - `Admin` -> `admin`
 - API authorization logic normalizes to app casing and treats unknown/missing roles as deny-by-default.
+- Use realm roles only for this model; do not use client roles for Student/Instructor/Admin authorization.
 
 Token and claim requirements:
 - Access token must include:
   - `sub` as immutable user identifier
   - realm roles (`realm_access.roles`) for global role checks
   - `email` and `email_verified` for invite/identity workflows
+- Ensure OIDC `roles` client scope is attached to `hydragen-web` (default scope).
+- Ignore `role_list` SAML scope for OIDC tokens.
 - Add protocol mappers only for required claims; avoid large token payloads.
 - Prefer short-lived access tokens with refresh-token rotation.
 
@@ -75,6 +78,10 @@ Admin and safety controls in Keycloak:
 Operational recommendation:
 - Manage realm config as code (realm export + version control) and promote across environments.
 - Keep environment-specific items externalized (hostnames, client secrets, redirect URIs).
+- Current repo wiring:
+  - Realm export file is stored at `keycloak/realm-export.json`.
+  - Docker Compose mounts `./keycloak` to `/opt/keycloak/data/import`.
+  - Keycloak starts with `--import-realm` to import realm definitions on container start.
 
 ## Authorization Model
 
