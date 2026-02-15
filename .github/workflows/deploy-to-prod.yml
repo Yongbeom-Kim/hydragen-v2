@@ -34,12 +34,14 @@ jobs:
           echo KEYCLOAK_POSTGRES_PASSWORD=${{ secrets.KEYCLOAK_POSTGRES_PASSWORD }} >> .env
           echo KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME=${{ secrets.KEYCLOAK_BOOTSTRAP_ADMIN_USERNAME }} >> .env
           echo KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD=${{ secrets.KEYCLOAK_BOOTSTRAP_ADMIN_PASSWORD }} >> .env
-
-          cat .env
+          
+      - name: Show redacted env
+        run: |
+          sed -E 's/=.*/=***REDACTED***/' .env
 
       - name: Deploy
         run: make start_detached-cx23
-        
+
       - name: Cleanup
         if: always()
         run: shred -u .env || rm -f .env
