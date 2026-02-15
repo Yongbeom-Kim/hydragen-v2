@@ -31,7 +31,10 @@ Clients:
 - `hydragen-web` (public client, SPA):
   - Standard flow (Authorization Code + PKCE) enabled
   - Direct access grants disabled
-  - Valid redirect URIs and web origins limited to Hydragen frontend domains
+  - Valid redirect URIs:
+    - `https://hydragen.senpailearn.com/v2/api/callback`
+    - `http://localhost:3111/v2/api/callback`
+  - Web origins limited to Hydragen frontend domains
 - `hydragen-api`:
   - Used as API/resource audience in server-side token validation
   - No browser login flow
