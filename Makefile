@@ -1,7 +1,28 @@
+.PHONY: .env
+
+ENV ?= dev # or staging or prod
+
+VAULT_ADDR := https://bao.yongbeom.net
+VAULT_KV_PATH := dotenv_files/senpailearn_projects/hydragen_v2
+VAULT_ENV_CONTENTS_FIELD := .env.$(ENV)
+
 ##@ Utility
 help:  ## Display this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m\033[0m\n"} /^[\.a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
+##@ Secrets from OpenBun (Note: assumes entire .env file inside ONE kv pair)
+.env: ## Load .env file onto disk from OpenBun (only on local development machine)
+	@if [ "$(ENV)" != "dev" ]; then \
+		printf '\033[1;31mWarning: This is not the local environment. Aborting.\033[0m\n'; \
+		exit 1; \
+	fi
+	VAULT_ADDR=$(VAULT_ADDR) bao kv get -field $(VAULT_ENV_CONTENTS_FIELD) $(VAULT_KV_PATH) > .env
+
+.env.example: .env ## Generate a .env.example file from OpenBun
+	cat .env | cut -d '=' -f 1 > .env.example
+
+source: ## Directly source environment variables from Bun and start a new subshell
+	set -a && source <(VAULT_ADDR=$(VAULT_ADDR) bao kv get -field $(VAULT_ENV_CONTENTS_FIELD) $(VAULT_KV_PATH)) && set +a && $$SHELL
 
 ##@ Setup
 # Prepare local development environment, install hooks, etc.
