@@ -1,7 +1,5 @@
 package domain
 
-import "hydragen-v2/server/utils"
-
 type CompoundMetadata struct {
 	InchiKey        string   `json:"inchiKey"`
 	Name            string   `json:"name"`
@@ -13,7 +11,7 @@ type CompoundMetadata struct {
 	ImageUrl        string   `json:"imageUrl"`
 }
 
-func (c CompoundMetadata) AddImageUrl() CompoundMetadata {
-	c.ImageUrl = utils.BACKEND_URL_PREFIX + "compounds/" + c.InchiKey + "/image"
-	return c
-}
+// func (c CompoundMetadata) AddImageUrl() CompoundMetadata {
+// 	c.ImageUrl = utils.BACKEND_URL_PREFIX + "compounds/" + c.InchiKey + "/image"
+// 	return c
+// }
