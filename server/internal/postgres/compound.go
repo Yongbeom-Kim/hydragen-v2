@@ -44,17 +44,13 @@ func (store *PostgresCompoundMetadataStore) Get(ctx context.Context, inchiKey st
 	return &result, nil
 }
 
-func ListCompounds(ctx context.Context, db *sql.DB, page int, pageSize int) ([]domain.CompoundMetadata, error) {
+func (store *PostgresCompoundMetadataStore) List(ctx context.Context, page int, pageSize int) ([]domain.CompoundMetadata, error) {
 	if pageSize > 100 {
 		pageSize = 100
 	}
 	offset := (page - 1) * pageSize
 	count := pageSize
 
-	return queryCompoundList(ctx, db, count, offset)
-}
-
-func queryCompoundList(ctx context.Context, db *sql.DB, count int, offset int) ([]domain.CompoundMetadata, error) {
 	const listCompoundsSQL = `
 		SELECT
 			c.inchikey,
@@ -71,7 +67,7 @@ func queryCompoundList(ctx context.Context, db *sql.DB, count int, offset int) (
 		LIMIT $1 OFFSET $2
 	`
 
-	rows, err := db.QueryContext(ctx, listCompoundsSQL, count, offset)
+	rows, err := store.db.QueryContext(ctx, listCompoundsSQL, count, offset)
 	if err != nil {
 		slog.Error("[DB QueryCompoundList]: postgres error", "error", err, "count", count, "offset", offset)
 		return nil, err
@@ -102,13 +98,12 @@ func queryCompoundList(ctx context.Context, db *sql.DB, count int, offset int) (
 		return nil, err
 	}
 	return results, nil
-
 }
 
-func CountCompounds(ctx context.Context, db *sql.DB) (int, error) {
+func (store *PostgresCompoundMetadataStore) Count(ctx context.Context) (int, error) {
 	const countSQL = `SELECT COUNT(*) FROM compounds`
 	var total int
-	err := db.QueryRowContext(ctx, countSQL).Scan(&total)
+	err := store.db.QueryRowContext(ctx, countSQL).Scan(&total)
 	if err != nil {
 		slog.Error("[DB CountCompounds]: db error", "error", err)
 		return 0, err
