@@ -1,21 +1,28 @@
-package db
+package postgres
 
 import (
 	"context"
 	"database/sql"
-	"hydragen-v2/server/utils"
 	"os"
 	"time"
 )
 
+func envOrDefault(key string, fallback string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	return value
+}
+
 func Open() (*sql.DB, error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		user := utils.EnvOrDefault("POSTGRES_USER", "postgres")
-		password := utils.EnvOrDefault("POSTGRES_PASSWORD", "postgres")
-		host := utils.EnvOrDefault("POSTGRES_HOST", "postgres")
-		port := utils.EnvOrDefault("POSTGRES_PORT", "5432")
-		database := utils.EnvOrDefault("POSTGRES_DB", "postgres")
+		user := envOrDefault("POSTGRES_USER", "postgres")
+		password := envOrDefault("POSTGRES_PASSWORD", "postgres")
+		host := envOrDefault("POSTGRES_HOST", "postgres")
+		port := envOrDefault("POSTGRES_PORT", "5432")
+		database := envOrDefault("POSTGRES_DB", "postgres")
 		dsn = "postgres://" + user + ":" + password + "@" + host + ":" + port + "/" + database + "?sslmode=disable"
 	}
 

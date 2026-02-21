@@ -6,9 +6,11 @@ import (
 	"errors"
 	compoundmetadatastore "hydragen-v2/server/internal/compound_metadata_store/core"
 	"hydragen-v2/server/internal/domain"
+	"hydragen-v2/server/internal/http_helper"
 	"hydragen-v2/server/utils"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -23,14 +25,25 @@ type compoundsListResponse struct {
 	Total    int                       `json:"total"`
 }
 
+func parsePositiveInt(value string, fallback int) int {
+	if value == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(value)
+	if err != nil || parsed <= 0 {
+		return fallback
+	}
+	return parsed
+}
+
 func (h *Handler) GetCompoundListHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	slog.Info("[GetCompoundListHandler]: start", "method", r.Method, "path", r.URL.Path, "rawQuery", r.URL.RawQuery)
 	defer slog.Info("[GetCompoundListHandler]: end", "method", r.Method, "path", r.URL.Path, "duration", time.Since(start))
 
 	query := r.URL.Query()
-	page := utils.ParsePositiveInt(query.Get("page"), 1)
-	pageSize := utils.ParsePositiveInt(query.Get("pageSize"), 20)
+	page := parsePositiveInt(query.Get("page"), 1)
+	pageSize := parsePositiveInt(query.Get("pageSize"), 20)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
@@ -50,7 +63,7 @@ func (h *Handler) GetCompoundListHandler(w http.ResponseWriter, r *http.Request)
 
 	slog.Info("[GetCompoundListHandler]: successful response", "page", page, "pageSize", pageSize)
 
-	utils.WriteJSON(w, http.StatusOK, compoundsListResponse{Items: compounds, Page: page, PageSize: pageSize, Total: count})
+	http_helper.WriteJSON(w, http.StatusOK, compoundsListResponse{Items: compounds, Page: page, PageSize: pageSize, Total: count})
 }
 
 func (h *Handler) GetCompoundDetailHandler(w http.ResponseWriter, r *http.Request) {
@@ -81,5 +94,5 @@ func (h *Handler) GetCompoundDetailHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	slog.Info("[GetCompoundDetailHandler]: successful response", "inchiKey", inchiKey)
-	utils.WriteJSON(w, http.StatusOK, record)
+	http_helper.WriteJSON(w, http.StatusOK, record)
 }
