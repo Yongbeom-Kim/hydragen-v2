@@ -7,7 +7,6 @@ import (
 	compoundmetadatastore "hydragen-v2/server/internal/compound_metadata_store/core"
 	"hydragen-v2/server/internal/domain"
 	"hydragen-v2/server/internal/http_helper"
-	"hydragen-v2/server/utils"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -16,6 +15,10 @@ import (
 
 type Handler struct {
 	service compoundmetadatastore.Service
+}
+
+func NewHandler(service *compoundmetadatastore.Service) *Handler {
+	return &Handler{service: *service}
 }
 
 type compoundsListResponse struct {
@@ -89,7 +92,7 @@ func (h *Handler) GetCompoundDetailHandler(w http.ResponseWriter, r *http.Reques
 			return
 		}
 		slog.Error("[GetCompoundDetailHandler]: QueryCompoundDetail error", "inchiKey", inchiKey, "error", err)
-		utils.WriteError(w, http.StatusInternalServerError, err)
+		http_helper.WriteError(w, http.StatusInternalServerError, err)
 		return
 	}
 

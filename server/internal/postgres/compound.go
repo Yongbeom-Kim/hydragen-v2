@@ -12,6 +12,10 @@ type PostgresCompoundMetadataStore struct {
 	db *sql.DB
 }
 
+func NewPostgresCompoundMetadataStore(db *sql.DB) *PostgresCompoundMetadataStore {
+	return &PostgresCompoundMetadataStore{db: db}
+}
+
 func (store *PostgresCompoundMetadataStore) Get(ctx context.Context, inchiKey string) (*domain.CompoundMetadata, error) {
 	const detailSQL = `
 		SELECT

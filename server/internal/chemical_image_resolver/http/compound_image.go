@@ -13,6 +13,10 @@ type Handler struct {
 	resolver *chemicalimageresolver.Resolver
 }
 
+func NewHandler(resolver *chemicalimageresolver.Resolver) *Handler {
+	return &Handler{resolver: resolver}
+}
+
 func (a *Handler) GetCompoundImageHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	slog.Info("[GetCompoundImageHandler]: start", "method", r.Method, "path", r.URL.Path)

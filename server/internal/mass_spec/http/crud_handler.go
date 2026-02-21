@@ -12,7 +12,11 @@ import (
 )
 
 type Handler struct {
-	crudService massspec.MassSpecCrudService
+	crudService massspec.Service
+}
+
+func NewHandler(crudService massspec.Service) *Handler {
+	return &Handler{crudService: crudService}
 }
 
 type massSpectrumResponse struct {

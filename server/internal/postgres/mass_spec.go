@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"hydragen-v2/server/internal/domain"
-	"hydragen-v2/server/utils"
 	"log/slog"
 )
 
@@ -18,6 +17,19 @@ var fallbackSpectra = map[string][]domain.MassSpectraRecord{
 }
 
 const MZ_SCALE = 10000
+
+type PostgresMassSpecStore struct {
+	db          *sql.DB
+	useFallback bool
+}
+
+func NewPostgresMassSpecStore(db *sql.DB, useFallback bool) *PostgresMassSpecStore {
+	return &PostgresMassSpecStore{db: db, useFallback: useFallback}
+}
+
+func (s *PostgresMassSpecStore) GetSpectra(ctx context.Context, inchiKey string) ([]domain.MassSpectraRecord, error) {
+	return GetMassSpectra(ctx, s.db, inchiKey, s.useFallback)
+}
 
 func scaleDownMzFromDb(rawValue []int) []float32 {
 	var result []float32
@@ -71,8 +83,8 @@ func GetMassSpectra(ctx context.Context, db *sql.DB, inchiKey string, useFallbac
 	var spectra []domain.MassSpectraRecord
 	for rows.Next() {
 		var rec domain.MassSpectraRecord
-		var MZ_raw utils.PgInt4Array
-		var Peaks_raw utils.PgInt4Array
+		var MZ_raw PgInt4Array
+		var Peaks_raw PgInt4Array
 		err := rows.Scan(
 			&rec.ID,
 			&rec.InchiKey,

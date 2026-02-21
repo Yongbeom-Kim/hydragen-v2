@@ -10,15 +10,19 @@ type MassSpecStore interface {
 	GetSpectra(ctx context.Context, inchiKey string) ([]domain.MassSpectraRecord, error)
 }
 
-type MassSpecCrudService interface {
+type Service interface {
 	GetSpectra(ctx context.Context, inchiKey string) ([]domain.MassSpectraRecord, error)
 }
 
-type MassSpecCrudHandler struct {
+type MassSpectraCrudService struct {
 	store MassSpecStore
 }
 
-func (h *MassSpecCrudHandler) GetSpectra(ctx context.Context, inchiKey string) ([]domain.MassSpectraRecord, error) {
+func NewMassSpectraCrudService(store MassSpecStore) *MassSpectraCrudService {
+	return &MassSpectraCrudService{store: store}
+}
+
+func (h *MassSpectraCrudService) GetSpectra(ctx context.Context, inchiKey string) ([]domain.MassSpectraRecord, error) {
 	spectra, err := h.store.GetSpectra(ctx, inchiKey)
 	if err != nil {
 		slog.Error("[MassSpecCrudHandler.GetSpectra] failed to retrieve spectra", "inchiKey", inchiKey, "error", err)
