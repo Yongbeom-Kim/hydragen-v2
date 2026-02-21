@@ -9,8 +9,8 @@ import (
 	compoundmetadatastore "hydragen-v2/server/internal/compound_metadata_store/core"
 	compoundmetadatastore_http "hydragen-v2/server/internal/compound_metadata_store/http"
 	"hydragen-v2/server/internal/http_helper"
-	massspec "hydragen-v2/server/internal/mass_spec/core"
-	massspec_http "hydragen-v2/server/internal/mass_spec/http"
+	massspecservice "hydragen-v2/server/internal/mass_spec_service/core"
+	massspecservice_http "hydragen-v2/server/internal/mass_spec_service/http"
 	"hydragen-v2/server/internal/postgres"
 	"log"
 	"log/slog"
@@ -30,8 +30,8 @@ func main() {
 	compoundHandler := compoundmetadatastore_http.NewHandler(compoundService)
 
 	massSpecStore := postgres.NewPostgresMassSpecStore(db, db == nil)
-	massSpecService := massspec.NewMassSpectraCrudService(massSpecStore)
-	massSpecHandler := massspec_http.NewHandler(massSpecService)
+	massSpecService := massspecservice.NewMassSpectraCrudService(massSpecStore)
+	massSpecHandler := massspecservice_http.NewHandler(massSpecService)
 
 	providers := map[chemicalimageresolver.ProviderType]chemicalimageresolver.ThirdPartyProvider{
 		chemicalimageresolver.ProviderType("chembl"): &chemicalimageresolver_thirdparty.ChemblThirdPartyProvider{},

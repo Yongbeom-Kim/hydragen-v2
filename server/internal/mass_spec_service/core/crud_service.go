@@ -1,4 +1,4 @@
-package massspec
+package massspecservice
 
 import (
 	"context"

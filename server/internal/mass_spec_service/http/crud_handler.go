@@ -1,10 +1,10 @@
-package massspec_http
+package massspecservice_http
 
 import (
 	"context"
 	"hydragen-v2/server/internal/domain"
 	"hydragen-v2/server/internal/http_helper"
-	massspec "hydragen-v2/server/internal/mass_spec/core"
+	massspecservice "hydragen-v2/server/internal/mass_spec_service/core"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -12,10 +12,10 @@ import (
 )
 
 type Handler struct {
-	crudService massspec.Service
+	crudService massspecservice.Service
 }
 
-func NewHandler(crudService massspec.Service) *Handler {
+func NewHandler(crudService massspecservice.Service) *Handler {
 	return &Handler{crudService: crudService}
 }
 
