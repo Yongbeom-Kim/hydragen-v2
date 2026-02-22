@@ -58,11 +58,20 @@ func MassSpectraFillInMissingMz(record domain.MassSpectraRecord) domain.MassSpec
 	mz_idx := 0
 
 	for mz := 0; mz <= maxMzRounded; mz++ {
-		if mz_idx < len(record.MZ) && mz_idx < len(record.Peaks) && Round(record.MZ[mz_idx]) == mz {
+		// Consume all peaks that round to this integer (e.g. 19.5 and 20.0 both round to 20).
+		// Emit one slot per peak so we don't combine; otherwise we'd never advance mz_idx and drop later peaks.
+		emitted := false
+		for mz_idx < len(record.MZ) && Round(record.MZ[mz_idx]) == mz {
 			resultMz = append(resultMz, record.MZ[mz_idx])
-			resultPeaks = append(resultPeaks, record.Peaks[mz_idx])
+			if mz_idx < len(record.Peaks) {
+				resultPeaks = append(resultPeaks, record.Peaks[mz_idx])
+			} else {
+				resultPeaks = append(resultPeaks, 0)
+			}
 			mz_idx++
-		} else {
+			emitted = true
+		}
+		if !emitted {
 			resultMz = append(resultMz, float32(mz))
 			resultPeaks = append(resultPeaks, 0)
 		}
